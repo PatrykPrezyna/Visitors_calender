@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Boston Visitors Calendar</title>
+<style>
+  :root {
+    --sophie: #4f8cff;
+    --sylwia: #ff8a4f;
+    --seweryn: #4fd67a;
+    --mario: #b06fe0;
+    --departure: #e05c5c;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --text: #222;
+    --muted: #888;
+    --border: #e4e6ea;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 32px 16px 64px;
+  }
+  h1 {
+    text-align: center;
+    font-size: 1.6rem;
+    margin-bottom: 4px;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+  .swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+  .months {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .month-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .month-title {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 12px;
+    font-size: 1.05rem;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th {
+    font-size: 0.7rem;
+    color: var(--muted);
+    font-weight: 500;
+    padding-bottom: 6px;
+  }
+  td {
+    text-align: center;
+    padding: 0;
+    height: 38px;
+    vertical-align: middle;
+    font-size: 0.85rem;
+    border-radius: 6px;
+  }
+  td.empty { background: transparent; }
+  td .day-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    border-radius: 6px;
+  }
+  td.sophie .day-num { background: var(--sophie); color: white; font-weight: 600; }
+  td.sylwia .day-num { background: var(--sylwia); color: white; font-weight: 600; }
+  td.seweryn .day-num { background: var(--seweryn); color: white; font-weight: 600; }
+  td.departure .day-num {
+    background: var(--card);
+    color: var(--departure);
+    font-weight: 700;
+    border: 2px dashed var(--departure);
+  }
+  .visit-list {
+    max-width: 700px;
+    margin: 40px auto 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+  }
+  .visit-list h2 {
+    font-size: 1.1rem;
+    margin-top: 0;
+    margin-bottom: 12px;
+  }
+  .visit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 0.95rem;
+  }
+</style>
+</head>
+<body>
+
+<h1>Who's Visiting in Boston</h1>
+<div class="subtitle">Summer &ndash; Winter 2026</div>
+
+<div class="legend">
+  <div class="legend-item"><span class="swatch" style="background:var(--sophie)"></span>Sophie</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--sylwia)"></span>Babcia Sylwia</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--seweryn)"></span>Seweryn</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--mario)"></span>Mario (dates TBD)</div>
+  <div class="legend-item"><span class="swatch" style="background:var(--card); border:2px dashed var(--departure)"></span>Our departure</div>
+</div>
+
+<div class="months" id="months"></div>
+
+<div class="visit-list">
+  <h2>Visit Summary</h2>
+  <div class="visit-row"><span class="swatch" style="background:var(--sophie)"></span>Sophie &mdash; 30 July to 20 August 2026</div>
+  <div class="visit-row"><span class="swatch" style="background:var(--sylwia)"></span>Babcia Sylwia &mdash; 22 August to 5 September 2026</div>
+  <div class="visit-row"><span class="swatch" style="background:var(--seweryn)"></span>Seweryn &mdash; 1 October to 30 October 2026</div>
+  <div class="visit-row"><span class="swatch" style="background:var(--mario)"></span>Mario &mdash; ?</div>
+  <div class="visit-row"><span class="swatch" style="background:var(--card); border:2px dashed var(--departure)"></span>Our departure &mdash; 19 December 2026</div>
+</div>
+
+<script>
+  // Visits as [startISO, endISO, cssClass]
+  const visits = [
+    ["2026-07-30", "2026-08-20", "sophie"],
+    ["2026-08-22", "2026-09-05", "sylwia"],
+    ["2026-10-01", "2026-10-30", "seweryn"],
+  ];
+
+  const departureDate = "2026-12-19";
+
+  function classForDate(iso) {
+    for (const [start, end, cls] of visits) {
+      if (iso >= start && iso <= end) return cls;
+    }
+    return null;
+  }
+
+  const monthNames = ["January","February","March","April","May","June",
+    "July","August","September","October","November","December"];
+
+  function buildMonth(year, monthIndex) {
+    const card = document.createElement("div");
+    card.className = "month-card";
+
+    const title = document.createElement("div");
+    title.className = "month-title";
+    title.textContent = `${monthNames[monthIndex]} ${year}`;
+    card.appendChild(title);
+
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+    ["Mo","Tu","We","Th","Fr","Sa","Su"].forEach(d => {
+      const th = document.createElement("th");
+      th.textContent = d;
+      headRow.appendChild(th);
+    });
+    thead.appendChild(headRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement("tbody");
+    const firstDay = new Date(year, monthIndex, 1);
+    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    // JS getDay: 0=Sun..6=Sat -> convert to Mon=0..Sun=6
+    let startOffset = (firstDay.getDay() + 6) % 7;
+
+    let day = 1;
+    let row;
+    for (let i = 0; i < 6 && day <= daysInMonth; i++) {
+      row = document.createElement("tr");
+      for (let j = 0; j < 7; j++) {
+        const td = document.createElement("td");
+        if (i === 0 && j < startOffset) {
+          td.className = "empty";
+        } else if (day > daysInMonth) {
+          td.className = "empty";
+        } else {
+          const iso = `${year}-${String(monthIndex+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+          const cls = classForDate(iso);
+          if (iso === departureDate) {
+            td.className = "departure";
+          } else if (cls) {
+            td.className = cls;
+          }
+          const span = document.createElement("div");
+          span.className = "day-num";
+          span.textContent = day;
+          td.appendChild(span);
+          day++;
+        }
+        row.appendChild(td);
+      }
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+    card.appendChild(table);
+    return card;
+  }
+
+  const container = document.getElementById("months");
+  [[2026,6],[2026,7],[2026,8],[2026,9],[2026,10],[2026,11]].forEach(([y,m]) => {
+    container.appendChild(buildMonth(y, m));
+  });
+</script>
+
+</body>
+</html>
