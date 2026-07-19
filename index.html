@@ -9,6 +9,7 @@
     --sylwia: #ff8a4f;
     --seweryn: #4fd67a;
     --mario: #b06fe0;
+    --emily: #f5c542;
     --departure: #e05c5c;
     --bg: #f7f8fa;
     --card: #ffffff;
@@ -103,6 +104,8 @@
   td.sophie .day-num { background: var(--sophie); color: white; font-weight: 600; }
   td.sylwia .day-num { background: var(--sylwia); color: white; font-weight: 600; }
   td.seweryn .day-num { background: var(--seweryn); color: white; font-weight: 600; }
+  td.mario .day-num { background: var(--mario); color: white; font-weight: 600; }
+  td.emily .day-num { background: var(--emily); color: var(--text); font-weight: 700; }
   td.departure .day-num {
     background: var(--card);
     color: var(--departure);
@@ -136,43 +139,74 @@
 <h1>Who's Visiting in Boston</h1>
 <div class="subtitle">Summer &ndash; Winter 2026</div>
 
-<div class="legend">
-  <div class="legend-item"><span class="swatch" style="background:var(--sophie)"></span>Sophie</div>
-  <div class="legend-item"><span class="swatch" style="background:var(--sylwia)"></span>Babcia Sylwia</div>
-  <div class="legend-item"><span class="swatch" style="background:var(--seweryn)"></span>Seweryn</div>
-  <div class="legend-item"><span class="swatch" style="background:var(--mario)"></span>Mario (dates TBD)</div>
-  <div class="legend-item"><span class="swatch" style="background:var(--card); border:2px dashed var(--departure)"></span>Our departure</div>
-</div>
+<div class="legend"></div>
 
 <div class="months" id="months"></div>
 
 <div class="visit-list">
   <h2>Visit Summary</h2>
-  <div class="visit-row"><span class="swatch" style="background:var(--sophie)"></span>Sophie &mdash; 30 July to 20 August 2026</div>
-  <div class="visit-row"><span class="swatch" style="background:var(--sylwia)"></span>Babcia Sylwia &mdash; 22 August to 5 September 2026</div>
-  <div class="visit-row"><span class="swatch" style="background:var(--seweryn)"></span>Seweryn &mdash; 1 October to 30 October 2026</div>
-  <div class="visit-row"><span class="swatch" style="background:var(--mario)"></span>Mario &mdash; ?</div>
-  <div class="visit-row"><span class="swatch" style="background:var(--card); border:2px dashed var(--departure)"></span>Our departure &mdash; 19 December 2026</div>
+  <div id="visit-summary"></div>
 </div>
 
 <script>
-  const visits = [
-    ["2026-07-30", "2026-08-20", "sophie"],
-    ["2026-08-22", "2026-09-05", "sylwia"],
-    ["2026-10-01", "2026-10-30", "seweryn"],
+  const visitData = [
+    { name: "Sophie", range: ["2026-07-30", "2026-08-20"], cssClass: "sophie", colorVar: "--sophie", textColor: "white" },
+    { name: "Emily", range: ["2026-08-19", "2026-08-22"], cssClass: "emily", colorVar: "--emily", textColor: "var(--text)" },
+    { name: "Babcia Sylwia", range: ["2026-08-22", "2026-09-05"], cssClass: "sylwia", colorVar: "--sylwia", textColor: "white" },
+    { name: "Mario", range: ["2026-09-06", "2026-09-16"], cssClass: "mario", colorVar: "--mario", textColor: "white" },
+    { name: "Seweryn", range: ["2026-10-01", "2026-10-30"], cssClass: "seweryn", colorVar: "--seweryn", textColor: "white" },
   ];
 
   const departureDate = "2026-12-19";
+  const monthNames = ["January","February","March","April","May","June",
+    "July","August","September","October","November","December"];
 
   function classForDate(iso) {
-    for (const [start, end, cls] of visits) {
-      if (iso >= start && iso <= end) return cls;
+    for (const visitor of visitData) {
+      const [start, end] = visitor.range;
+      if (iso >= start && iso <= end) return visitor.cssClass;
     }
     return null;
   }
 
-  const monthNames = ["January","February","March","April","May","June",
-    "July","August","September","October","November","December"];
+  function formatDate(iso) {
+    const [year, month, day] = iso.split("-");
+    return `${Number(day)} ${monthNames[Number(month) - 1]} ${year}`;
+  }
+
+  function formatRange([start, end]) {
+    return start === end ? formatDate(start) : `${formatDate(start)} to ${formatDate(end)}`;
+  }
+
+  function buildLegend() {
+    const legend = document.querySelector(".legend");
+    visitData.forEach(visitor => {
+      const item = document.createElement("div");
+      item.className = "legend-item";
+      item.innerHTML = `<span class="swatch" style="background:var(${visitor.colorVar})"></span>${visitor.name}`;
+      legend.appendChild(item);
+    });
+    const departureItem = document.createElement("div");
+    departureItem.className = "legend-item";
+    departureItem.innerHTML = `<span class="swatch" style="background:var(--card); border:2px dashed var(--departure)"></span>Our departure`;
+    legend.appendChild(departureItem);
+  }
+
+  function buildSummary() {
+    const summary = document.getElementById("visit-summary");
+    visitData.forEach(visitor => {
+      const row = document.createElement("div");
+      row.className = "visit-row";
+      row.innerHTML = `<span class="swatch" style="background:var(${visitor.colorVar})"></span>${visitor.name} — ${formatRange(visitor.range)}`;
+      summary.appendChild(row);
+    });
+    const departureRow = document.createElement("div");
+    departureRow.className = "visit-row";
+    departureRow.innerHTML = `<span class="swatch" style="background:var(--card); border:2px dashed var(--departure)"></span>Our departure — ${formatDate(departureDate)}`;
+    summary.appendChild(departureRow);
+  }
+
+  const calendarMonths = [[2026,6],[2026,7],[2026,8],[2026,9],[2026,10],[2026,11]];
 
   function buildMonth(year, monthIndex) {
     const card = document.createElement("div");
@@ -197,6 +231,7 @@
     const tbody = document.createElement("tbody");
     const firstDay = new Date(year, monthIndex, 1);
     const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
+    // JS getDay: 0=Sun..6=Sat -> convert to Mon=0..Sun=6
     let startOffset = (firstDay.getDay() + 6) % 7;
 
     let day = 1;
@@ -232,8 +267,10 @@
     return card;
   }
 
+  buildLegend();
+  buildSummary();
   const container = document.getElementById("months");
-  [[2026,6],[2026,7],[2026,8],[2026,9],[2026,10],[2026,11]].forEach(([y,m]) => {
+  calendarMonths.forEach(([y, m]) => {
     container.appendChild(buildMonth(y, m));
   });
 </script>
